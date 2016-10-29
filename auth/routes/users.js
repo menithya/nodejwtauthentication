@@ -14,33 +14,4 @@ router.get('/users', function(req, res) {
   });
 });  
 
-router.post('/login',function(req,res){
-
-	 console.log(req.app)
-	User.findOne({
-		name:req.body.name
-	},function(err,user){
-		if(err) throw err;
-
-		if(!user){
-			res.json({sucess:false,message:'user not found'})
-		}else{
-             console.log(req.body.passwrod)
-			if(req.body.password !== user.passwrod){
-				res.json({
-					sucess:false,
-					message:"Wrong passwrod"
-				})
-			}else{
-				var token=jwt.sign(user,req.app.get('superSecret'));
-				res.json({
-					sucess:true,
-					message:"Hello",
-					token:token
-				})
-			}
-			
-		}
-	})
-}) 
 module.exports = router;

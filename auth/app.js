@@ -17,6 +17,7 @@ mongoose.connect(config.database);
 
 
 var app = express();
+var router = express.Router();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -33,6 +34,58 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+
+app.post('/login',function(req,res){
+
+   console.log(req.body.name)
+  User.findOne({
+    name:req.body.name
+  },function(err,user){
+    if(err) throw err;
+
+    if(!user){
+      res.json({sucess:false,message:'user not found'})
+    }else{
+             console.log(req.body.password)
+      if(req.body.password !== user.password){
+        res.json({
+          sucess:false,
+          message:"Wrong passwrod"
+        })
+      }else{
+        var token=jwt.sign(user,req.app.get('superSecret'));
+        res.json({
+          sucess:true,
+          message:"Hello",
+          token:token
+        })
+      }
+      
+    }
+  })
+})
+//--------------------------------------------------------------
+  //protect routes
+//------------------------------------------------------------------
+
+app.use(function(req,res,next){
+  var token=req.body.token || req.param('token') || req.headers['x-acess-token'];
+  if(token){
+    jwt.verify(token,app.get('superSecret'),function(err,decoded){
+      if(err){
+        return res.json({success:false,message:'invalid token'})
+      }else{
+        req.decoded=decoded;
+        next();
+      }
+    })
+  }else{
+    return res.status(403).send({ 
+      success: false, 
+      message: 'No token provided.'
+    });
+  }
+});
 app.use('/users', users);
 
 app.get('/setup', function(req, res) {
